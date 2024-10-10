@@ -68,6 +68,18 @@ Updates
 		-BugFixes
 	V1.18
 		-Add get Size - Number of tabs
+	V1.19
+		-Add AddTabAdvanced - Add a tab with the ASSegmentedTab_Tab type
+		-Add Width to the ASSegmentedTab_Tab type
+			-It's a optional tab property
+			-If 0, then the width of the tab is calculated automatically
+			-Default: 0
+	V1.20
+		-B4J BugFix
+	V1.21
+		-AutoDecreaseTextSize BugFix
+	V1.22
+		-Add set Index2 - Sets the index without the TabChanged Event
 #End If
 
 #DesignerProperty: Key: CornerRadiusBackground, DisplayName: Corner Radius Background, FieldType: Int, DefaultValue: 0, MinRange: 0
@@ -92,7 +104,7 @@ Sub Class_Globals
 	
 	Type ASSegmentedTab_ItemTextProperties(TextColor As Int,SelectedTextColor As Int,TextFont As B4XFont,TextAlignment_Vertical As String,TextAlignment_Horizontal As String,BackgroundColor As Int)
 	Type ASSegmentedTab_SeperatorProperties(Color As Int,Width As Float,HeightPercentage As Int,CornerRadius As Float)
-	Type ASSegmentedTab_Tab(Text As String,Icon As B4XBitmap,Value As Object,ItemTextProperties As ASSegmentedTab_ItemTextProperties)
+	Type ASSegmentedTab_Tab(Text As String,Icon As B4XBitmap,Value As Object,Width As Float,ItemTextProperties As ASSegmentedTab_ItemTextProperties)
 	
 	Private g_ItemTextProperties As ASSegmentedTab_ItemTextProperties
 	Private g_SeperatorProperties As ASSegmentedTab_SeperatorProperties
@@ -165,17 +177,36 @@ Private Sub Base_Resize (Width As Double, Height As Double)
 	xpnl_seperators_background.SetLayoutAnimated(0,0,0,Width,Height)
 	
 	If xpnl_background.NumberOfViews > 0 Then
-		Dim tab_width As Float = Width/xpnl_background.NumberOfViews
+		
+		Dim CustomTabWidths As Float = 0
+		Dim CustomTabWidthCounter As Int = 0
+		For i = 0 To xpnl_background.NumberOfViews -1
+			If xpnl_background.GetView(i).Tag.As(ASSegmentedTab_Tab).Width > 0 Then
+				CustomTabWidths = CustomTabWidths + xpnl_background.GetView(i).Tag.As(ASSegmentedTab_Tab).Width
+				CustomTabWidthCounter = CustomTabWidthCounter +1
+			End If
+		Next
+		
+		Dim tab_width As Float = (Width-CustomTabWidths)/(xpnl_background.NumberOfViews-CustomTabWidthCounter)
 		For i = 0 To xpnl_background.NumberOfViews -1
 			Dim xpnl_tab_background As B4XView = xpnl_background.GetView(i)
+			Dim xTab As ASSegmentedTab_Tab = xpnl_tab_background.Tag
 			Dim xlbl_text As B4XView = xpnl_tab_background.GetView(0)
 			Dim xiv_icon As B4XView = xpnl_tab_background.GetView(1)
-			xpnl_tab_background.SetLayoutAnimated(0,tab_width * i,0,tab_width,Height)
-			xlbl_text.SetLayoutAnimated(0,0,0,tab_width,Height)
-			xiv_icon.SetLayoutAnimated(0,tab_width/2 - IIf(g_ImageHeight = 0,Height,g_ImageHeight)/2,Height/2 - IIf(g_ImageHeight = 0,Height,g_ImageHeight)/2,IIf(g_ImageHeight = 0,Height,g_ImageHeight),IIf(g_ImageHeight = 0,Height,g_ImageHeight))
-			If mAutoDecreaseTextSize = True Then CheckTextSize(xlbl_text)
+			
+			Dim ThisTabWidth As Float = tab_width
+			If xTab.Width > 0 Then ThisTabWidth = xTab.Width
+			
+			xpnl_tab_background.SetLayoutAnimated(0,IIf(i=0,0,xpnl_background.GetView(i-1).Left + xpnl_background.GetView(i-1).Width),0,ThisTabWidth,Height)
+			xlbl_text.SetLayoutAnimated(0,0,0,ThisTabWidth,Height)
+			xiv_icon.SetLayoutAnimated(0,ThisTabWidth/2 - IIf(g_ImageHeight = 0,Height,g_ImageHeight)/2,Height/2 - IIf(g_ImageHeight = 0,Height,g_ImageHeight)/2,IIf(g_ImageHeight = 0,Height,g_ImageHeight),IIf(g_ImageHeight = 0,Height,g_ImageHeight))
+			If mAutoDecreaseTextSize = True Then 
+				xlbl_text.Font = xTab.ItemTextProperties.TextFont
+				CheckTextSize(xlbl_text)
+			End If
 		Next
-		xpnl_selector.SetLayoutAnimated(0,tab_width * g_index + g_PaddingSelectionPanel,g_PaddingSelectionPanel,tab_width - (g_PaddingSelectionPanel*2),Height - (g_PaddingSelectionPanel*2))
+		'xpnl_selector.SetLayoutAnimated(0,Width * g_index + g_PaddingSelectionPanel,g_PaddingSelectionPanel,ThisTabWidth - (g_PaddingSelectionPanel*2),Height - (g_PaddingSelectionPanel*2))
+		xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(g_index).Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_background.GetView(g_index).Width - (g_PaddingSelectionPanel*2),xpnl_background.GetView(g_index).Height - (g_PaddingSelectionPanel*2))'normal
 	
 	End If
 	SetCircleClip(mBase,g_CornerRadiusBackground)
@@ -185,17 +216,30 @@ Private Sub Base_Resize (Width As Double, Height As Double)
 End Sub
 
 Private Sub CheckTextSize(xview As B4XView)
-	If (MeasureTextWidth(xview.Text,g_ItemTextProperties.TextFont) + IIf(xui.IsB4J = True,4,8)) <= xview.Width Then Return
+	'If (MeasureTextWidth(xview.Text,g_ItemTextProperties.TextFont) + IIf(xui.IsB4J = True,4,8)) <= xview.Width Then Return
 	Dim StartTextSize As Float = xview.TextSize
 	Dim Found As Boolean = False
-	For i = StartTextSize To 0 Step -1
-		If (MeasureTextWidth(xview.Text,xui.CreateFont(g_ItemTextProperties.TextFont.ToNativeFont,i)) + IIf(xui.IsB4J = True,4,8)) <= xview.Width Then
-			xview.Font = xui.CreateFont(g_ItemTextProperties.TextFont.ToNativeFont,i)
+	
+	Dim Gap As Float = 0
+	#If B4A
+	gap	 = 10dip
+	#Else If B4I
+	Gap = 15dip
+	#Else If B4J
+	Gap	 = 5dip
+	#End If
+	
+	Dim CurrentSize As Float = StartTextSize
+	Do While CurrentSize > 1
+		If (MeasureTextWidth(xview.Text,xui.CreateFont(g_ItemTextProperties.TextFont.ToNativeFont,CurrentSize)) + IIf(xui.IsB4J = True,4,8)) <= (xview.Width - Gap) Then
+			xview.TextSize = CurrentSize
 			Found = True
 			Exit
 		End If
-	Next
-	If Found = False Then xview.Font = xui.CreateFont(g_ItemTextProperties.TextFont.ToNativeFont,1)
+		CurrentSize = CurrentSize - 0.5
+	Loop
+	
+	If Found = False Then xview.TextSize = 1
 End Sub
 
 Private Sub CreateSeperator
@@ -216,14 +260,21 @@ Public Sub UpdateSeperators
 End Sub
 
 Public Sub AddTab2(Text As String,icon As B4XBitmap,Value As Object)
-	AddTabIntern(Text,icon,Value)
+	Dim xTab As ASSegmentedTab_Tab = CreateASSegmentedTab_Tab(Text,icon,Value,CreateASSegmentedTab_ItemTextProperties(g_ItemTextProperties.TextColor,g_ItemTextProperties.SelectedTextColor,g_ItemTextProperties.TextFont,g_ItemTextProperties.TextAlignment_Vertical,g_ItemTextProperties.TextAlignment_Horizontal,g_ItemTextProperties.BackgroundColor))
+	AddTabIntern(xTab)
 End Sub
 
 Public Sub AddTab(Text As String,icon As B4XBitmap)
-	AddTabIntern(Text,icon,"")
+	Dim xTab As ASSegmentedTab_Tab = CreateASSegmentedTab_Tab(Text,icon,"",CreateASSegmentedTab_ItemTextProperties(g_ItemTextProperties.TextColor,g_ItemTextProperties.SelectedTextColor,g_ItemTextProperties.TextFont,g_ItemTextProperties.TextAlignment_Vertical,g_ItemTextProperties.TextAlignment_Horizontal,g_ItemTextProperties.BackgroundColor))
+	AddTabIntern(xTab)
 End Sub
 
-Private Sub AddTabIntern(Text As String,icon As B4XBitmap,Value As Object)
+Public Sub AddTabAdvanced(xTab As ASSegmentedTab_Tab)
+	If xTab.ItemTextProperties.IsInitialized = False Then xTab.ItemTextProperties = CreateASSegmentedTab_ItemTextProperties(g_ItemTextProperties.TextColor,g_ItemTextProperties.SelectedTextColor,g_ItemTextProperties.TextFont,g_ItemTextProperties.TextAlignment_Vertical,g_ItemTextProperties.TextAlignment_Horizontal,g_ItemTextProperties.BackgroundColor)
+	AddTabIntern(xTab)
+End Sub
+
+Private Sub AddTabIntern(xTab As ASSegmentedTab_Tab)
 	Dim xpnl_tab_background As B4XView = xui.CreatePanel("xpnl_tab_background")
 	Dim lbl_text As Label
 	lbl_text.Initialize("")
@@ -239,10 +290,9 @@ Private Sub AddTabIntern(Text As String,icon As B4XBitmap,Value As Object)
 	
 	xpnl_tab_background.AddView(xiv_icon,0,0,IIf(g_ImageHeight = 0,mBase.Height,g_ImageHeight),IIf(g_ImageHeight = 0,mBase.Height,g_ImageHeight))
 	
-	Dim ItemTextProperties As ASSegmentedTab_ItemTextProperties = CreateASSegmentedTab_ItemTextProperties(g_ItemTextProperties.TextColor,g_ItemTextProperties.SelectedTextColor,g_ItemTextProperties.TextFont,g_ItemTextProperties.TextAlignment_Vertical,g_ItemTextProperties.TextAlignment_Horizontal,g_ItemTextProperties.BackgroundColor)
-	Dim xTab As ASSegmentedTab_Tab = CreateASSegmentedTab_Tab(Text,icon,Value,ItemTextProperties)
+
 	
-	If icon.IsInitialized = True And icon <> Null Then
+	If xTab.icon.IsInitialized = True And xTab.icon <> Null Then
 		
 		SetIconsWithColor(xiv_icon,xTab,xpnl_background.NumberOfViews = 0)
 		
@@ -255,7 +305,7 @@ Private Sub AddTabIntern(Text As String,icon As B4XBitmap,Value As Object)
 	
 	xpnl_tab_background.Color = xui.Color_Transparent
 	
-	xlbl_text.Text = Text
+	xlbl_text.Text = xTab.Text
 	
 	If xpnl_background.NumberOfViews = 0 Then
 		xlbl_text.TextColor = g_ItemTextProperties.SelectedTextColor
@@ -339,6 +389,14 @@ Public Sub setIndex(Index As Int)
 	g_index = Index
 	SelectedIndex(Index,0)
 End Sub
+
+'Sets the index without the TabChanged Event
+Public Sub setIndex2(Index As Int)
+	g_index = Index
+	xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(Index).Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_background.GetView(Index).Width - (g_PaddingSelectionPanel*2),xpnl_selector.Height)'normal
+	TabClick(xpnl_background.GetView(Index),True,False)
+End Sub
+
 'changes the CornerRadius of the view
 Public Sub setCornerRadiusBackground(corner_radius As Float)
 	g_CornerRadiusBackground = corner_radius
@@ -378,11 +436,11 @@ Public Sub setShowSeperators(visible As Boolean)
 End Sub
 #If B4J
 Private Sub xpnl_tab_background_MouseClicked (EventData As MouseEvent)
-	TabClick(Sender,False)
+	TabClick(Sender,False,True)
 End Sub
 #Else
 Private Sub xpnl_tab_background_Click
-	TabClick(Sender,False)
+	TabClick(Sender,False,True)
 End Sub
 #End If
 
@@ -419,7 +477,7 @@ Private Sub SetIconsWithColor(xiv_icon As B4XView,xTab As ASSegmentedTab_Tab,isS
 	
 End Sub
 
-Private Sub TabClick(xpnl_tab_background As B4XView,isIntern As Boolean)
+Private Sub TabClick(xpnl_tab_background As B4XView,isIntern As Boolean,WithEvent As Boolean)
 	For i = 0 To xpnl_background.NumberOfViews -1
 		Dim xiv_icon As B4XView = xpnl_background.GetView(i).GetView(1)
 		Dim xTab As ASSegmentedTab_Tab = xpnl_background.GetView(i).Tag
@@ -431,7 +489,7 @@ Private Sub TabClick(xpnl_tab_background As B4XView,isIntern As Boolean)
 				
 				SetIconsWithColor(xiv_icon,xTab,True)
 				
-				TabChanged(i)
+				If WithEvent Then TabChanged(i)
 			End If
 		Else
 			xpnl_background.GetView(i).GetView(0).TextColor = g_ItemTextProperties.TextColor
@@ -439,8 +497,24 @@ Private Sub TabClick(xpnl_tab_background As B4XView,isIntern As Boolean)
 			
 		End If
 	Next
+
+	#If B4J
+	Dim jo As JavaObject = xpnl_selector
+	Dim shape As JavaObject
+	Dim cx As Double = xpnl_tab_background.Width - (g_PaddingSelectionPanel*2)
+	Dim cy As Double = xpnl_tab_background.Height - (g_PaddingSelectionPanel*2)
+	shape.InitializeNewInstance("javafx.scene.shape.Rectangle", Array(cx, cy))
+	If g_CornerRadiusSelectionPanel > 0 Then
+		Dim d As Double = g_CornerRadiusSelectionPanel
+		shape.RunMethod("setArcHeight", Array(d))
+		shape.RunMethod("setArcWidth", Array(d))
+	End If
+	jo.RunMethod("setClip", Array(shape))
+	#End If
+
 	xpnl_selector.SetLayoutAnimated(250,xpnl_tab_background.Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_tab_background.Width - (g_PaddingSelectionPanel*2),xpnl_tab_background.Height - (g_PaddingSelectionPanel*2))'normal
 	UpdateSeperators
+
 '	xpnl_selector.SetLayoutAnimated(250,xpnl_tab_background.Left -10dip,0,xpnl_tab_background.Width,xpnl_tab_background.Height)'bounce
 '	Sleep(250/2)
 '	xpnl_selector.SetLayoutAnimated(250/2,xpnl_tab_background.Left + 10dip,0,xpnl_tab_background.Width,xpnl_tab_background.Height)'bounce
@@ -450,8 +524,8 @@ End Sub
 
 Public Sub SelectedIndex(index As Int,Duration As Int)
 	g_index = index
-	xpnl_selector.SetLayoutAnimated(Duration,mBase.Width/xpnl_background.NumberOfViews * index +g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_selector.Width,xpnl_selector.Height)'normal
-	TabClick(xpnl_background.GetView(index),True)
+	xpnl_selector.SetLayoutAnimated(Duration,xpnl_background.GetView(index).Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_background.GetView(index).Width - (g_PaddingSelectionPanel*2),xpnl_selector.Height)'normal
+	TabClick(xpnl_background.GetView(index),True,True)
 End Sub
 
 Public Sub getBase As B4XView
@@ -498,9 +572,9 @@ Private Sub SetCircleClip (pnl As B4XView,radius As Int)'ignore
 #if B4J
 Dim jo As JavaObject = pnl
 Dim shape As JavaObject
-Dim cx As Double = pnl.Width
-Dim cy As Double = pnl.Height
-shape.InitializeNewInstance("javafx.scene.shape.Rectangle", Array(cx, cy))
+	Dim cx As Double = pnl.Width
+	Dim cy As Double = pnl.Height
+	shape.InitializeNewInstance("javafx.scene.shape.Rectangle", Array(cx, cy))
 If radius > 0 Then
 	Dim d As Double = radius
 	shape.RunMethod("setArcHeight", Array(d))

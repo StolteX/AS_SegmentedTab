@@ -16,6 +16,7 @@ Sub Class_Globals
 	Private xui As XUI
 	Private ASSegmentedTab1 As ASSegmentedTab
 	Private ASSegmentedTab2 As ASSegmentedTab
+	Private ASSegmentedTab3 As ASSegmentedTab
 End Sub
 
 Public Sub Initialize
@@ -42,8 +43,8 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 '	For i = 0 To 3 -1		
 '		ASSegmentedTab1.AddTab("Test " & i,Null)		
 '	Next
-	'ASSegmentedTab1.AutoDecreaseTextSize = True
-	ASSegmentedTab1.AddTab("This is a long long long long text",Null)
+	ASSegmentedTab1.AutoDecreaseTextSize = True
+	ASSegmentedTab1.AddTab("This is a long long long text",Null)
 	ASSegmentedTab1.AddTab("Monthly",Null)
 	ASSegmentedTab1.AddTab("Yearly",Null)
 	
@@ -70,8 +71,9 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 '	ASSegmentedTab1.SeperatorProperties.Width = 2dip 'the width of the seperators
 '	ASSegmentedTab1.SeperatorProperties.Color = xui.Color_Red 'the color of the seperators
 '	ASSegmentedTab1.UpdateSeperators 'commit the style changes
-	
 
+'	ASSegmentedTab3.AddTab("Item #1",Null)
+'	ASSegmentedTab3.AddTab("Item #2",Null)
 
 End Sub
 

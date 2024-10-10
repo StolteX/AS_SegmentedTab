@@ -10,6 +10,6 @@ ModuleClosedNodes0=2,6
 ModuleClosedNodes1=
 ModuleClosedNodes2=
 ModuleClosedNodes3=1
-NavigationStack=ASSegmentedTab,UpdateSeperators,185,0,ASSegmentedTab,AddTab,186,4,ASSegmentedTab,Base_Resize,138,0,B4XMainPage,B4XPage_Created,38,1,ASSegmentedTab,CheckTextSize,150,6,ASSegmentedTab,ini_props,150,0,ASSegmentedTab,GetARGB,595,0,Visual Designer,MainPage.bal,-100,3,ASSegmentedTab,TintBmp,533,0,ASSegmentedTab,CreateASSegmentedTab_ItemTextProperties,639,0,ASSegmentedTab,CreateASSegmentedTab_Tab,635,0
+NavigationStack=ASSegmentedTab,AddTabIntern,280,6,B4XMainPage,Class_Globals,12,0,ASSegmentedTab,ini_props,148,0,ASSegmentedTab,SelectedIndex,471,0,ASSegmentedTab,xpnl_tab_background_Click,405,0,ASSegmentedTab,TabClick,462,0,Visual Designer,MainPage.bal,-100,6,ASSegmentedTab,Base_Resize,193,6,B4XMainPage,ASSegmentedTab1_TabChanged,78,0,B4XMainPage,B4XPage_Created,40,6
 SelectedBuild=0
 VisibleModules=2,1
