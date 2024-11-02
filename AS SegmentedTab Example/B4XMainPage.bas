@@ -32,7 +32,7 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	#If B4I
 	Wait For B4XPage_Resize (Width As Int, Height As Int)
 	#End If
-	
+
 	'OLD
 	'ASSegmentedTab1.Base.SetColorAndBorder(ASSegmentedTab1.Base.Color,0,0,ASSegmentedTab1.Base.Height/2) 'make the view rounded
 	'ASSegmentedTab2.Base.SetColorAndBorder(ASSegmentedTab2.Base.Color,0,0,10dip) 'make the view rounded

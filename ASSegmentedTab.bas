@@ -80,6 +80,14 @@ Updates
 		-AutoDecreaseTextSize BugFix
 	V1.22
 		-Add set Index2 - Sets the index without the TabChanged Event
+	V2.00
+		-BugFixes and Improvements
+		-Add get and set BackgroundColor
+		-Add get and set SelectionColor
+		
+		Todo: TabEnabled
+		Todo: Theme
+		Todo: HapticFeedback - Default: False
 #End If
 
 #DesignerProperty: Key: CornerRadiusBackground, DisplayName: Corner Radius Background, FieldType: Int, DefaultValue: 0, MinRange: 0
@@ -87,10 +95,10 @@ Updates
 #DesignerProperty: Key: PaddingSelectionPanel, DisplayName: Padding Selection Panel, FieldType: Int, DefaultValue: 0, MinRange: 0
 #DesignerProperty: Key: ShowSeperators, DisplayName: Show Seperators, FieldType: Boolean, DefaultValue: False
 
-#DesignerProperty: Key: BackgroundColor, DisplayName: Background Color, FieldType: Color, DefaultValue: 0xFF000000
+#DesignerProperty: Key: BackgroundColor, DisplayName: Background Color, FieldType: Color, DefaultValue: 0xFF000000, Description: The Background Color of the view
 #DesignerProperty: Key: SelectionColor, DisplayName: Selection Color, FieldType: Color, DefaultValue: 0xFF2D8879
-#DesignerProperty: Key: SelectionTextColor, DisplayName: SelectionTextColor, FieldType: Color, DefaultValue: 0xFFFFFFFF
-#DesignerProperty: Key: SeperatorColor, DisplayName: Seperator Color, FieldType: Color, DefaultValue: 0x98FFFFFF
+#DesignerProperty: Key: SelectionTextColor, DisplayName: SelectionTextColor, FieldType: Color, DefaultValue: 0xFFFFFFFF, Description: Change the color in the code with the ItemTextProperties.SelectionTextColor Property
+#DesignerProperty: Key: SeperatorColor, DisplayName: Seperator Color, FieldType: Color, DefaultValue: 0x98FFFFFF, Description: Change the color in the code with the ItemTextProperties.SelectionTextColor Property
 #DesignerProperty: Key: TextColor, DisplayName: Text Color, FieldType: Color, DefaultValue: 0xFFFFFFFF
 
 #Event: TabChanged(index as int)
@@ -109,14 +117,16 @@ Sub Class_Globals
 	Private g_ItemTextProperties As ASSegmentedTab_ItemTextProperties
 	Private g_SeperatorProperties As ASSegmentedTab_SeperatorProperties
 	
-	Private g_CornerRadiusBackground As Float
-	Private g_CornerRadiusSelectionPanel As Float
-	Private g_PaddingSelectionPanel As Float
-	Private g_ShowSeperators As Boolean
-	Private g_ImageHeight As Float = 0
+	Private m_CornerRadiusBackground As Float
+	Private m_CornerRadiusSelectionPanel As Float
+	Private m_PaddingSelectionPanel As Float
+	Private m_ShowSeperators As Boolean
+	Private m_ImageHeight As Float = 0
+	Private m_BackgroundColor As Int
+	Private m_SelectionColor As Int
 	
-	Private g_index As Int = 0
-	Public mAutoDecreaseTextSize As Boolean = False
+	Private m_Index As Int = 0
+	Private m_AutoDecreaseTextSize As Boolean = False
 	
 	'Views
 	Private xpnl_background As B4XView
@@ -162,13 +172,13 @@ Private Sub ini_props(Props As Map)
 	g_ItemTextProperties = CreateASSegmentedTab_ItemTextProperties(xui.PaintOrColorToColor(Props.GetDefault("TextColor",0xFFFFFFFF)),xui.PaintOrColorToColor(Props.GetDefault("SelectionTextColor",0xFFFFFFFF)),xui.CreateDefaultFont(15),"CENTER","CENTER",xui.Color_Transparent)
 	g_SeperatorProperties = CreateASSegmentedTab_SeperatorProperties(xui.PaintOrColorToColor(Props.GetDefault("SeperatorColor",0x98FFFFFF)),2dip,50,0)
 	
-	g_CornerRadiusBackground = DipToCurrent(Props.GetDefault("CornerRadiusBackground",0))
-	g_CornerRadiusSelectionPanel = DipToCurrent(Props.GetDefault("CornerRadiusSelectionPanel",0))
-	g_PaddingSelectionPanel = DipToCurrent(Props.GetDefault("PaddingSelectionPanel",0))
-	g_ShowSeperators = Props.GetDefault("ShowSeperators",False)
+	m_CornerRadiusBackground = DipToCurrent(Props.GetDefault("CornerRadiusBackground",0))
+	m_CornerRadiusSelectionPanel = DipToCurrent(Props.GetDefault("CornerRadiusSelectionPanel",0))
+	m_PaddingSelectionPanel = DipToCurrent(Props.GetDefault("PaddingSelectionPanel",0))
+	m_ShowSeperators = Props.GetDefault("ShowSeperators",False)
+	m_BackgroundColor = xui.PaintOrColorToColor(Props.GetDefault("BackgroundColor",0xFF000000))
+	m_SelectionColor = xui.PaintOrColorToColor(Props.GetDefault("SelectionColor",0xFF2D8879))
 	
-	mBase.Color = xui.PaintOrColorToColor(Props.GetDefault("BackgroundColor",0xFF000000))
-	xpnl_selector.Color = xui.PaintOrColorToColor(Props.GetDefault("SelectionColor",0xFF2D8879))
 End Sub
 
 Private Sub Base_Resize (Width As Double, Height As Double)
@@ -199,18 +209,18 @@ Private Sub Base_Resize (Width As Double, Height As Double)
 			
 			xpnl_tab_background.SetLayoutAnimated(0,IIf(i=0,0,xpnl_background.GetView(i-1).Left + xpnl_background.GetView(i-1).Width),0,ThisTabWidth,Height)
 			xlbl_text.SetLayoutAnimated(0,0,0,ThisTabWidth,Height)
-			xiv_icon.SetLayoutAnimated(0,ThisTabWidth/2 - IIf(g_ImageHeight = 0,Height,g_ImageHeight)/2,Height/2 - IIf(g_ImageHeight = 0,Height,g_ImageHeight)/2,IIf(g_ImageHeight = 0,Height,g_ImageHeight),IIf(g_ImageHeight = 0,Height,g_ImageHeight))
-			If mAutoDecreaseTextSize = True Then 
+			xiv_icon.SetLayoutAnimated(0,ThisTabWidth/2 - IIf(m_ImageHeight = 0,Height,m_ImageHeight)/2,Height/2 - IIf(m_ImageHeight = 0,Height,m_ImageHeight)/2,IIf(m_ImageHeight = 0,Height,m_ImageHeight),IIf(m_ImageHeight = 0,Height,m_ImageHeight))
+			If m_AutoDecreaseTextSize = True Then 
 				xlbl_text.Font = xTab.ItemTextProperties.TextFont
 				CheckTextSize(xlbl_text)
 			End If
 		Next
-		'xpnl_selector.SetLayoutAnimated(0,Width * g_index + g_PaddingSelectionPanel,g_PaddingSelectionPanel,ThisTabWidth - (g_PaddingSelectionPanel*2),Height - (g_PaddingSelectionPanel*2))
-		xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(g_index).Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_background.GetView(g_index).Width - (g_PaddingSelectionPanel*2),xpnl_background.GetView(g_index).Height - (g_PaddingSelectionPanel*2))'normal
+		'xpnl_selector.SetLayoutAnimated(0,Width * m_Index + m_PaddingSelectionPanel,m_PaddingSelectionPanel,ThisTabWidth - (m_PaddingSelectionPanel*2),Height - (m_PaddingSelectionPanel*2))
+		xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(m_Index).Left + m_PaddingSelectionPanel,m_PaddingSelectionPanel,xpnl_background.GetView(m_Index).Width - (m_PaddingSelectionPanel*2),xpnl_background.GetView(m_Index).Height - (m_PaddingSelectionPanel*2))'normal
 	
 	End If
-	SetCircleClip(mBase,g_CornerRadiusBackground)
-	SetCircleClip(xpnl_selector,g_CornerRadiusSelectionPanel)
+	SetCircleClip(mBase,m_CornerRadiusBackground)
+	SetCircleClip(xpnl_selector,m_CornerRadiusSelectionPanel)
 	UpdateSeperators
 	
 End Sub
@@ -224,7 +234,7 @@ Private Sub CheckTextSize(xview As B4XView)
 	#If B4A
 	gap	 = 10dip
 	#Else If B4I
-	Gap = 15dip
+	Gap = 17dip
 	#Else If B4J
 	Gap	 = 5dip
 	#End If
@@ -254,7 +264,7 @@ Public Sub UpdateSeperators
 		'xpnl_seperator.Color = g_SeperatorProperties.Color
 		Dim xpnl_tmp_tab As B4XView = xpnl_background.GetView(i)
 		xpnl_seperator.SetLayoutAnimated(0,xpnl_tmp_tab.Left + xpnl_tmp_tab.Width - (g_SeperatorProperties.Width/2),xpnl_tmp_tab.Height/2 - (xpnl_tmp_tab.Height*g_SeperatorProperties.HeightPercentage/100)/2,g_SeperatorProperties.Width,xpnl_tmp_tab.Height*g_SeperatorProperties.HeightPercentage/100)
-		xpnl_seperator.Visible = g_ShowSeperators And i < (xpnl_background.NumberOfViews -1) And i <> g_index And i <> (g_index -1)
+		xpnl_seperator.Visible = m_ShowSeperators And i < (xpnl_background.NumberOfViews -1) And i <> m_Index And i <> (m_Index -1)
 		xpnl_seperator.SetColorAndBorder(g_SeperatorProperties.Color,0,0,g_SeperatorProperties.CornerRadius)
 	Next
 End Sub
@@ -288,7 +298,7 @@ Private Sub AddTabIntern(xTab As ASSegmentedTab_Tab)
 	iv_icon.Initialize("")
 	Dim xiv_icon As B4XView = iv_icon
 	
-	xpnl_tab_background.AddView(xiv_icon,0,0,IIf(g_ImageHeight = 0,mBase.Height,g_ImageHeight),IIf(g_ImageHeight = 0,mBase.Height,g_ImageHeight))
+	xpnl_tab_background.AddView(xiv_icon,0,0,IIf(m_ImageHeight = 0,mBase.Height,m_ImageHeight),IIf(m_ImageHeight = 0,mBase.Height,m_ImageHeight))
 	
 
 	
@@ -319,7 +329,7 @@ Private Sub AddTabIntern(xTab As ASSegmentedTab_Tab)
 	xpnl_tab_background.Tag = xTab
 	
 	xpnl_background.AddView(xpnl_tab_background,0,0,0,0)
-	If g_ShowSeperators = True Then CreateSeperator
+	If m_ShowSeperators = True Then CreateSeperator
 	
 	Base_Resize(mBase.Width,mBase.Height)
 End Sub
@@ -342,7 +352,7 @@ Public Sub RefreshTabs
 		Dim xTab As ASSegmentedTab_Tab = xpnl_tab_background.Tag
 	
 		xlbl_text.Text = xTab.Text
-		If i = g_index Then
+		If i = m_Index Then
 			xlbl_text.TextColor = xTab.ItemTextProperties.SelectedTextColor
 		Else
 			xlbl_text.TextColor = xTab.ItemTextProperties.TextColor
@@ -354,7 +364,7 @@ Public Sub RefreshTabs
 	
 		If xTab.Icon.IsInitialized = True And xTab.Icon <> Null Then
 			
-			SetIconsWithColor(xiv_icon,xTab,i = g_index)
+			SetIconsWithColor(xiv_icon,xTab,i = m_Index)
 						
 			xiv_icon.Visible = True
 			xlbl_text.Visible = False
@@ -366,8 +376,28 @@ Public Sub RefreshTabs
 	Next
 End Sub
 
+#Region Properties
+
+Public Sub setSelectionColor(SelectionColor As Int)
+	m_SelectionColor = SelectionColor
+	xpnl_selector.Color = SelectionColor
+End Sub
+
+Public Sub getSelectionColor As Int
+	Return m_SelectionColor
+End Sub
+
+Public Sub setBackgroundColor(BackgroundColor As Int)
+	m_BackgroundColor = BackgroundColor
+	mBase.Color = BackgroundColor
+End Sub
+
+Public Sub getBackgroundColor As Int
+	Return m_BackgroundColor
+End Sub
+
 Public Sub setImageHeight(height As Float)
-	g_ImageHeight = height
+	m_ImageHeight = height
 	Base_Resize(mBase.Width,mBase.Height)
 End Sub
 Public Sub getSeperatorProperties As ASSegmentedTab_SeperatorProperties
@@ -376,55 +406,57 @@ End Sub
 Public Sub getSeperatorsHeight As Float
 	Return mBase.Height*g_SeperatorProperties.HeightPercentage/100
 End Sub
+
 'change the properties before you add atab, then this settings will be change the on the next added tab
 '<code>ASSegmentedTab1.ItemTextProperties.TextFont = xui.CreateDefaultBoldFont(15)</code>
 Public Sub getItemTextProperties As ASSegmentedTab_ItemTextProperties
 	Return g_ItemTextProperties
 End Sub
 Public Sub getIndex As Int
-	Return g_index
+	Return m_Index
 End Sub
+
 'get or sets the index - sets the index without animation
 Public Sub setIndex(Index As Int)
-	g_index = Index
+	m_Index = Index
 	SelectedIndex(Index,0)
 End Sub
 
 'Sets the index without the TabChanged Event
 Public Sub setIndex2(Index As Int)
-	g_index = Index
-	xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(Index).Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_background.GetView(Index).Width - (g_PaddingSelectionPanel*2),xpnl_selector.Height)'normal
+	m_Index = Index
+	xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(Index).Left + m_PaddingSelectionPanel,m_PaddingSelectionPanel,xpnl_background.GetView(Index).Width - (m_PaddingSelectionPanel*2),xpnl_selector.Height)'normal
 	TabClick(xpnl_background.GetView(Index),True,False)
 End Sub
 
 'changes the CornerRadius of the view
 Public Sub setCornerRadiusBackground(corner_radius As Float)
-	g_CornerRadiusBackground = corner_radius
+	m_CornerRadiusBackground = corner_radius
 	SetCircleClip(mBase,corner_radius)
 End Sub
 'changes the CornerRadius of the selector
 Public Sub setCornerRadiusSelectionPanel(corner_radius As Float)
-	g_CornerRadiusSelectionPanel = corner_radius
+	m_CornerRadiusSelectionPanel = corner_radius
 	SetCircleClip(xpnl_selector,corner_radius)
 End Sub
 'set a distance from the corners for the selector
 Public Sub setPaddingSelectionPanel(padding As Float)
-	g_PaddingSelectionPanel = padding
+	m_PaddingSelectionPanel = padding
 	Base_Resize(mBase.Width,mBase.Height)
 End Sub
 'The text size is automatically adjusted to the space, if the text should not fit on one line
 'Default: False
 Public Sub getAutoDecreaseTextSize As Boolean
-	Return mAutoDecreaseTextSize
+	Return m_AutoDecreaseTextSize
 End Sub
 
 Public Sub setAutoDecreaseTextSize(DecreaseTextSize As Boolean)
-	mAutoDecreaseTextSize = DecreaseTextSize
+	m_AutoDecreaseTextSize = DecreaseTextSize
 	Base_Resize(mBase.Width,mBase.Height)
 End Sub
 
 Public Sub setShowSeperators(visible As Boolean)
-	g_ShowSeperators = visible
+	m_ShowSeperators = visible
 	If visible = False Then
 		xpnl_seperators_background.RemoveAllViews
 	Else
@@ -434,6 +466,9 @@ Public Sub setShowSeperators(visible As Boolean)
 		UpdateSeperators
 	End If
 End Sub
+
+#End Region
+
 #If B4J
 Private Sub xpnl_tab_background_MouseClicked (EventData As MouseEvent)
 	TabClick(Sender,False,True)
@@ -456,19 +491,19 @@ Private Sub SetIconsWithColor(xiv_icon As B4XView,xTab As ASSegmentedTab_Tab,isS
 		If isSelected Then
 			
 			#If B4J 
-			xiv_icon.SetBitmap(ChangeColorBasedOnAlphaLevel(xTab.Icon,g_ItemTextProperties.SelectedTextColor).Resize(xiv_icon.Width * scale,xiv_icon.Height * scale,True))
+			xiv_icon.SetBitmap(ChangeColorBasedOnAlphaLevel(xTab.Icon,xTab.ItemTextProperties.SelectedTextColor).Resize(xiv_icon.Width * scale,xiv_icon.Height * scale,True))
 			#Else
 			xiv_icon.SetBitmap(xTab.Icon.Resize(xiv_icon.Width * scale,xiv_icon.Height * scale,True))
-			TintBmp(xiv_icon,g_ItemTextProperties.SelectedTextColor)
+			TintBmp(xiv_icon,xTab.ItemTextProperties.SelectedTextColor)
 			#End If		
 			
 			Else
 				
 			#If B4J 
-			xiv_icon.SetBitmap(ChangeColorBasedOnAlphaLevel(xTab.Icon,g_ItemTextProperties.TextColor).Resize(xiv_icon.Width * scale,xiv_icon.Height * scale,True))
+			xiv_icon.SetBitmap(ChangeColorBasedOnAlphaLevel(xTab.Icon,xTab.ItemTextProperties.TextColor).Resize(xiv_icon.Width * scale,xiv_icon.Height * scale,True))
 			#Else
 			xiv_icon.SetBitmap(xTab.Icon.Resize(xiv_icon.Width * scale,xiv_icon.Height * scale,True))
-			TintBmp(xiv_icon,g_ItemTextProperties.TextColor)
+			TintBmp(xiv_icon,xTab.ItemTextProperties.TextColor)
 			#End If
 				
 		End If
@@ -484,15 +519,15 @@ Private Sub TabClick(xpnl_tab_background As B4XView,isIntern As Boolean,WithEven
 		
 		If xpnl_background.GetView(i) = xpnl_tab_background Then
 			If (xpnl_tab_background.Left <> xpnl_selector.Left) Or isIntern  Then
-				g_index = i
-				xpnl_background.GetView(i).GetView(0).TextColor = g_ItemTextProperties.SelectedTextColor
+				m_Index = i
+				xpnl_background.GetView(i).GetView(0).TextColor = xTab.ItemTextProperties.SelectedTextColor
 				
 				SetIconsWithColor(xiv_icon,xTab,True)
 				
 				If WithEvent Then TabChanged(i)
 			End If
 		Else
-			xpnl_background.GetView(i).GetView(0).TextColor = g_ItemTextProperties.TextColor
+			xpnl_background.GetView(i).GetView(0).TextColor = xTab.ItemTextProperties.TextColor
 			SetIconsWithColor(xiv_icon,xTab,False)
 			
 		End If
@@ -501,18 +536,18 @@ Private Sub TabClick(xpnl_tab_background As B4XView,isIntern As Boolean,WithEven
 	#If B4J
 	Dim jo As JavaObject = xpnl_selector
 	Dim shape As JavaObject
-	Dim cx As Double = xpnl_tab_background.Width - (g_PaddingSelectionPanel*2)
-	Dim cy As Double = xpnl_tab_background.Height - (g_PaddingSelectionPanel*2)
+	Dim cx As Double = xpnl_tab_background.Width - (m_PaddingSelectionPanel*2)
+	Dim cy As Double = xpnl_tab_background.Height - (m_PaddingSelectionPanel*2)
 	shape.InitializeNewInstance("javafx.scene.shape.Rectangle", Array(cx, cy))
-	If g_CornerRadiusSelectionPanel > 0 Then
-		Dim d As Double = g_CornerRadiusSelectionPanel
+	If m_CornerRadiusSelectionPanel > 0 Then
+		Dim d As Double = m_CornerRadiusSelectionPanel
 		shape.RunMethod("setArcHeight", Array(d))
 		shape.RunMethod("setArcWidth", Array(d))
 	End If
 	jo.RunMethod("setClip", Array(shape))
 	#End If
 
-	xpnl_selector.SetLayoutAnimated(250,xpnl_tab_background.Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_tab_background.Width - (g_PaddingSelectionPanel*2),xpnl_tab_background.Height - (g_PaddingSelectionPanel*2))'normal
+	xpnl_selector.SetLayoutAnimated(250,xpnl_tab_background.Left + m_PaddingSelectionPanel,m_PaddingSelectionPanel,xpnl_tab_background.Width - (m_PaddingSelectionPanel*2),xpnl_tab_background.Height - (m_PaddingSelectionPanel*2))'normal
 	UpdateSeperators
 
 '	xpnl_selector.SetLayoutAnimated(250,xpnl_tab_background.Left -10dip,0,xpnl_tab_background.Width,xpnl_tab_background.Height)'bounce
@@ -523,8 +558,8 @@ Private Sub TabClick(xpnl_tab_background As B4XView,isIntern As Boolean,WithEven
 End Sub
 
 Public Sub SelectedIndex(index As Int,Duration As Int)
-	g_index = index
-	xpnl_selector.SetLayoutAnimated(Duration,xpnl_background.GetView(index).Left + g_PaddingSelectionPanel,g_PaddingSelectionPanel,xpnl_background.GetView(index).Width - (g_PaddingSelectionPanel*2),xpnl_selector.Height)'normal
+	m_Index = index
+	xpnl_selector.SetLayoutAnimated(Duration,xpnl_background.GetView(index).Left + m_PaddingSelectionPanel,m_PaddingSelectionPanel,xpnl_background.GetView(index).Width - (m_PaddingSelectionPanel*2),xpnl_selector.Height)'normal
 	TabClick(xpnl_background.GetView(index),True,True)
 End Sub
 
