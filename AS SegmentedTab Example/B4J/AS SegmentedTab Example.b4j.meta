@@ -7,6 +7,6 @@ ModuleBreakpoints2=
 ModuleClosedNodes0=1,4
 ModuleClosedNodes1=
 ModuleClosedNodes2=1
-NavigationStack=ASSegmentedTab,getIndex,382,0,ASSegmentedTab,getSeperatorsHeight,375,0,ASSegmentedTab,getBackgroundColor,385,3,ASSegmentedTab,setShowSeperators,460,0,ASSegmentedTab,ini_props,171,0,ASSegmentedTab,RefreshTabs,353,0,ASSegmentedTab,TabClick,515,6,ASSegmentedTab,SetIconsWithColor,494,0,ASSegmentedTab,Class_Globals,122,6,ASSegmentedTab,Base_Resize,208,0,ASSegmentedTab,CheckTextSize,230,0
+NavigationStack=ASSegmentedTab,SetIconsWithColor,494,0,ASSegmentedTab,Base_Resize,208,0,ASSegmentedTab,Class_Globals,115,6,B4XMainPage,B4XPage_Created,40,0,ASSegmentedTab,CheckTextSize,247,0,ASSegmentedTab,ini_props,173,0,ASSegmentedTab,TabClick,539,6,ASSegmentedTab,setSelectionColor,376,0,Visual Designer,MainPage.bjl,-100,6,ASSegmentedTab,DesignerCreateView,146,0
 SelectedBuild=0
 VisibleModules=2,1

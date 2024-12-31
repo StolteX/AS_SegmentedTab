@@ -150,7 +150,7 @@ Public Sub DesignerCreateView (Base As Object, Lbl As Label, Props As Map)
 	xpnl_selector = xui.CreatePanel("")
 	
 	ini_props(Props)
-	
+	xpnl_selector.Color = m_SelectionColor
 	mBase.AddView(xpnl_selector,0,0,0,0)
 	mBase.AddView(xpnl_background,0,0,0,0)
 	mBase.AddView(xpnl_seperators_background,0,0,0,0)
@@ -241,7 +241,7 @@ Private Sub CheckTextSize(xview As B4XView)
 	
 	Dim CurrentSize As Float = StartTextSize
 	Do While CurrentSize > 1
-		If (MeasureTextWidth(xview.Text,xui.CreateFont(g_ItemTextProperties.TextFont.ToNativeFont,CurrentSize)) + IIf(xui.IsB4J = True,4,8)) <= (xview.Width - Gap) Then
+		If (MeasureTextWidth(xview.Text,xui.CreateFont(g_ItemTextProperties.TextFont.ToNativeFont,CurrentSize)) + IIf(xui.IsB4J = True,4,8)) <= (xview.Width - Gap - m_PaddingSelectionPanel*2) Then
 			xview.TextSize = CurrentSize
 			Found = True
 			Exit
