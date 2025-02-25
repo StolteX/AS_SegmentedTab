@@ -82,9 +82,12 @@ Updates
 		-Add set Index2 - Sets the index without the TabChanged Event
 	V2.00
 		-BugFixes and Improvements
-		-Add get and set BackgroundColor
-		-Add get and set SelectionColor
+		-New RemoveTab and RemoveTab2
+		-New get and set BackgroundColor
+		-New get and set SelectionColor
+		-New RebuildTabs - Removes all tabs And adds them again
 		
+
 		Todo: TabEnabled
 		Todo: Theme
 		Todo: HapticFeedback - Default: False
@@ -210,19 +213,23 @@ Private Sub Base_Resize (Width As Double, Height As Double)
 			xpnl_tab_background.SetLayoutAnimated(0,IIf(i=0,0,xpnl_background.GetView(i-1).Left + xpnl_background.GetView(i-1).Width),0,ThisTabWidth,Height)
 			xlbl_text.SetLayoutAnimated(0,0,0,ThisTabWidth,Height)
 			xiv_icon.SetLayoutAnimated(0,ThisTabWidth/2 - IIf(m_ImageHeight = 0,Height,m_ImageHeight)/2,Height/2 - IIf(m_ImageHeight = 0,Height,m_ImageHeight)/2,IIf(m_ImageHeight = 0,Height,m_ImageHeight),IIf(m_ImageHeight = 0,Height,m_ImageHeight))
-			If m_AutoDecreaseTextSize = True Then 
+			If m_AutoDecreaseTextSize = True Then
 				xlbl_text.Font = xTab.ItemTextProperties.TextFont
 				CheckTextSize(xlbl_text)
 			End If
 		Next
 		'xpnl_selector.SetLayoutAnimated(0,Width * m_Index + m_PaddingSelectionPanel,m_PaddingSelectionPanel,ThisTabWidth - (m_PaddingSelectionPanel*2),Height - (m_PaddingSelectionPanel*2))
-		xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(m_Index).Left + m_PaddingSelectionPanel,m_PaddingSelectionPanel,xpnl_background.GetView(m_Index).Width - (m_PaddingSelectionPanel*2),xpnl_background.GetView(m_Index).Height - (m_PaddingSelectionPanel*2))'normal
+		RefreshSeperator
 	
 	End If
 	SetCircleClip(mBase,m_CornerRadiusBackground)
 	SetCircleClip(xpnl_selector,m_CornerRadiusSelectionPanel)
 	UpdateSeperators
 	
+End Sub
+
+Private Sub RefreshSeperator
+	xpnl_selector.SetLayoutAnimated(0,xpnl_background.GetView(m_Index).Left + m_PaddingSelectionPanel,m_PaddingSelectionPanel,xpnl_background.GetView(m_Index).Width - (m_PaddingSelectionPanel*2),xpnl_background.GetView(m_Index).Height - (m_PaddingSelectionPanel*2))'normal
 End Sub
 
 Private Sub CheckTextSize(xview As B4XView)
@@ -266,6 +273,22 @@ Public Sub UpdateSeperators
 		xpnl_seperator.SetLayoutAnimated(0,xpnl_tmp_tab.Left + xpnl_tmp_tab.Width - (g_SeperatorProperties.Width/2),xpnl_tmp_tab.Height/2 - (xpnl_tmp_tab.Height*g_SeperatorProperties.HeightPercentage/100)/2,g_SeperatorProperties.Width,xpnl_tmp_tab.Height*g_SeperatorProperties.HeightPercentage/100)
 		xpnl_seperator.Visible = m_ShowSeperators And i < (xpnl_background.NumberOfViews -1) And i <> m_Index And i <> (m_Index -1)
 		xpnl_seperator.SetColorAndBorder(g_SeperatorProperties.Color,0,0,g_SeperatorProperties.CornerRadius)
+	Next
+End Sub
+
+'Removes a tab at the specified index
+Public Sub RemoveTab(Index As Int)
+	xpnl_background.GetView(Index).RemoveViewFromParent
+	RebuildTabs
+End Sub
+
+'Removes a tab with the specified value
+Public Sub RemoveTab2(Value As Object)
+	For i = 0 To xpnl_background.NumberOfViews -1
+		If xpnl_background.GetView(i).Tag.As(ASSegmentedTab_Tab).Value = Value Then
+			RemoveTab(i)
+			Return
+		End If
 	Next
 End Sub
 
@@ -341,6 +364,35 @@ End Sub
 
 Public Sub GetValue(Index As Int) As Object
 	Return xpnl_background.GetView(Index).Tag.As(ASSegmentedTab_Tab).Value
+End Sub
+
+'Removes all tabs And adds them again
+Public Sub RebuildTabs
+	
+	Dim OldIndex As Int = m_Index
+	
+	Dim lstTabs As List
+	lstTabs.Initialize
+	
+	For i = 0 To xpnl_background.NumberOfViews -1
+		lstTabs.Add(xpnl_background.GetView(i).Tag)
+	Next
+	
+	xpnl_background.RemoveAllViews
+	xpnl_seperators_background.RemoveAllViews
+
+	m_Index = 0
+
+	For i = 0 To lstTabs.Size -1
+		AddTabIntern(lstTabs.Get(i))
+	Next
+	
+	m_Index = Min(OldIndex,xpnl_background.NumberOfViews -1)
+	
+	RefreshSeperator
+	UpdateSeperators
+	RefreshTabs
+	
 End Sub
 
 Public Sub RefreshTabs

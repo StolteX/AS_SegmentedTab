@@ -46,6 +46,7 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	ASSegmentedTab1.AutoDecreaseTextSize = True
 	ASSegmentedTab1.AddTab("This is a long long long text",Null)
 	ASSegmentedTab1.AddTab("Monthly",Null)
+	ASSegmentedTab1.AddTab2("Monthly3",Null,"lul")
 	ASSegmentedTab1.AddTab("Yearly",Null)
 	
 	ASSegmentedTab2.AddTab("",ASSegmentedTab2.FontToBitmap(Chr(0xE236),True,15,xui.Color_White))
@@ -74,6 +75,13 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 
 '	ASSegmentedTab3.AddTab("Item #1",Null)
 '	ASSegmentedTab3.AddTab("Item #2",Null)
+
+	ASSegmentedTab1.GetTab(0).Text = "New Text"
+	ASSegmentedTab1.RefreshTabs
+
+	ASSegmentedTab1.AddTab("Test",Null)
+	
+
 
 End Sub
 
