@@ -16,7 +16,6 @@ Sub Class_Globals
 	Private xui As XUI
 	Private ASSegmentedTab1 As ASSegmentedTab
 	Private ASSegmentedTab2 As ASSegmentedTab
-	Private ASSegmentedTab3 As ASSegmentedTab
 End Sub
 
 Public Sub Initialize
@@ -33,19 +32,9 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	Wait For B4XPage_Resize (Width As Int, Height As Int)
 	#End If
 
-	'OLD
-	'ASSegmentedTab1.Base.SetColorAndBorder(ASSegmentedTab1.Base.Color,0,0,ASSegmentedTab1.Base.Height/2) 'make the view rounded
-	'ASSegmentedTab2.Base.SetColorAndBorder(ASSegmentedTab2.Base.Color,0,0,10dip) 'make the view rounded
-
-	'NEW
-	ASSegmentedTab1.CornerRadiusBackground = ASSegmentedTab1.Base.Height/2 'make the view rounded
-	ASSegmentedTab2.CornerRadiusBackground = 10dip 'make the view rounded
-'	For i = 0 To 3 -1		
-'		ASSegmentedTab1.AddTab("Test " & i,Null)		
-'	Next
 	ASSegmentedTab1.AutoDecreaseTextSize = True
 	ASSegmentedTab1.AddTab("This is a long long long text",Null)
-	ASSegmentedTab1.AddTab("Monthly",Null)
+	ASSegmentedTab1.AddTab("Monthly",Null).Enabled = False
 	ASSegmentedTab1.AddTab2("Monthly3",Null,"lul")
 	ASSegmentedTab1.AddTab("Yearly",Null)
 	
@@ -54,35 +43,10 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	ASSegmentedTab2.AddTab("",ASSegmentedTab2.FontToBitmap(Chr(0xE237),True,15,xui.Color_White))
 	ASSegmentedTab2.AddTab("Test",Null)
 	
-	ASSegmentedTab2.ItemTextProperties.TextFont = xui.CreateMaterialIcons(25)	
+	ASSegmentedTab2.ItemTextProperties.TextFont = xui.CreateMaterialIcons(25)
 	ASSegmentedTab2.AddTab(Chr(0xE238),Null)
 	ASSegmentedTab2.AddTab(Chr(0xE23F),Null)
-	ASSegmentedTab2.PaddingSelectionPanel = 5dip
-	'OLD
-	'ASSegmentedTab1.SelectionPanel.SetColorAndBorder(ASSegmentedTab1.SelectionPanel.Color,0,0,ASSegmentedTab1.SelectionPanel.Height/2)'makes the selector round
-	'ASSegmentedTab2.SelectionPanel.SetColorAndBorder(ASSegmentedTab2.SelectionPanel.Color,0,0,10dip)'makes the selector rounded
 	
-	'NEW
-	ASSegmentedTab1.CornerRadiusSelectionPanel = ASSegmentedTab1.SelectionPanel.Height/2'makes the selector round
-	ASSegmentedTab2.CornerRadiusSelectionPanel = 10dip'makes the selector round
-
-	ASSegmentedTab2.SeperatorProperties.CornerRadius = ASSegmentedTab2.SeperatorProperties.Width/2'round seperators
-	ASSegmentedTab2.UpdateSeperators
-'	ASSegmentedTab1.ShowSeperators = True 'Shows the seperators - or use the Designer Property
-'	ASSegmentedTab1.SeperatorProperties.Width = 2dip 'the width of the seperators
-'	ASSegmentedTab1.SeperatorProperties.Color = xui.Color_Red 'the color of the seperators
-'	ASSegmentedTab1.UpdateSeperators 'commit the style changes
-
-'	ASSegmentedTab3.AddTab("Item #1",Null)
-'	ASSegmentedTab3.AddTab("Item #2",Null)
-
-	ASSegmentedTab1.GetTab(0).Text = "New Text"
-	ASSegmentedTab1.RefreshTabs
-
-	ASSegmentedTab1.AddTab("Test",Null)
-	
-
-
 End Sub
 
 'You can see the list of page related events in the B4XPagesManager object. The event name is B4XPage.
@@ -98,4 +62,8 @@ End Sub
 
 Private Sub CheckBox1_CheckedChange(Checked As Boolean)
 	ASSegmentedTab2.ShowSeperators = Checked
+End Sub
+
+Private Sub ASSegmentedTab1_DisabledTabClicked(xTab As ASSegmentedTab_Tab)
+	Log("DisabledTabClicked")
 End Sub

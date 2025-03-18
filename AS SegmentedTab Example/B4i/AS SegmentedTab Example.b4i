@@ -2,12 +2,13 @@
 File1=MainPage.bil
 FileGroup1=Default Group
 Group=Default Group
-Library1=icore
-Library2=b4xpages
+Library1=b4xpages
+Library2=icore
+Library3=xui views
 Module1=|relative|..\..\ASSegmentedTab
 Module2=|relative|..\B4XMainPage
 NumberOfFiles=1
-NumberOfLibraries=2
+NumberOfLibraries=3
 NumberOfModules=2
 Version=8.45
 @EndOfDesignText@
